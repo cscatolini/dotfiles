@@ -4,6 +4,8 @@
 
 (require 'cl)
 
+(setenv "GOPATH" "/Users/cscatolini/Code/go")
+
 (load "package")
 (package-initialize)
 (add-to-list 'package-archives
@@ -374,17 +376,37 @@
   (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
     (replace-regexp re "" nil beg end)))
 
-(defun go-mode-setup ()
-  (go-eldoc-setup)
-  (setq gofmt-command "goimports && golint")
-  (add-hook 'before-save-hook 'gofmt-before-save))
-(add-hook 'go-mode-hook 'go-mode-setup)
+;; gomode config
+(defun set-exec-path-from-shell-PATH ()
+  (let ((path-from-shell (replace-regexp-in-string
+                          "[ \t\n]*$"
+                          ""
+                          (shell-command-to-string "$SHELL --login -i -c 'echo $PATH'"))))
+    (setenv "PATH" path-from-shell)
+    (setq eshell-path-env path-from-shell) ; for eshell users
+    (setq exec-path (split-string path-from-shell path-separator))))
 
-; (defun go-mode-setup ()
-;   (go-eldoc-setup)
-;   (setq gofmt-command "goimports && go vet && golint")
-;   (add-hook 'before-save-hook 'gofmt-before-save)
-; (add-hook 'go-mode-hook 'go-mode-setup)
+(when window-system (set-exec-path-from-shell-PATH))
+
+(add-to-list 'exec-path "/Users/cscatolini/Code/go/bin")
+(defun my-go-mode-hook ()
+  ; Use goimports instead of go-fmt
+  (setq gofmt-command "goimports")
+
+  ; gofmt on save
+  (add-hook 'before-save-hook 'gofmt-before-save)
+
+  ; Customize compile command to run go build
+  (if (not (string-match "go" compile-command))
+      (set (make-local-variable 'compile-command)
+           "go build -v && go vet"))
+
+  ; godef key bindings
+  (local-set-key (kbd "M-?") 'godef-jump)
+  (local-set-key (kbd "M-.") 'pop-tag-mark)
+  )
+(add-hook 'go-mode-hook 'my-go-mode-hook)
+; -----------------------------------------------------------------------------------------
 
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
@@ -540,7 +562,7 @@
  '(git-gutter:modified-sign "== ")
  '(package-selected-packages
    (quote
-    (exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme yaml-mode writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
+    (toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme yaml-mode writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -659,3 +681,13 @@
                     :background "#800000"
                     :foreground "#ffffff"
                     :underline nil)
+
+(require 'whitespace)
+(setq
+ whitespace-style '(face empty tabs lines-tail trailing)
+ whitespace-line-column 100)
+(global-whitespace-mode t)
+
+(require 'column-marker)
+(add-hook 'prog-mode-hook (lambda () (interactive) (column-marker-1 100)))
+
