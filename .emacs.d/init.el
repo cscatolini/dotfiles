@@ -377,6 +377,9 @@
     (replace-regexp re "" nil beg end)))
 
 ;; gomode config
+(with-eval-after-load 'go-mode
+   (require 'go-autocomplete))
+
 (defun set-exec-path-from-shell-PATH ()
   (let ((path-from-shell (replace-regexp-in-string
                           "[ \t\n]*$"
@@ -390,11 +393,15 @@
 
 (add-to-list 'exec-path "/Users/cscatolini/Code/go/bin")
 (defun my-go-mode-hook ()
-  ; Use goimports instead of go-fmt
+                                        ; Use goimports instead of go-fmt
   (setq gofmt-command "goimports")
 
   ; gofmt on save
-  (add-hook 'before-save-hook 'gofmt-before-save)
+  (lambda ()
+            (add-hook 'before-save-hook 'gofmt-before-save)
+            (setq tab-width 4)
+            (setq indent-tabs-mode 1))
+;  (add-hook 'before-save-hook 'gofmt-before-save)
 
   ; Customize compile command to run go build
   (if (not (string-match "go" compile-command))
@@ -406,6 +413,10 @@
   (local-set-key (kbd "M-.") 'pop-tag-mark)
   )
 (add-hook 'go-mode-hook 'my-go-mode-hook)
+
+(defun auto-complete-for-go ()
+  (auto-complete-mode 1))
+(add-hook 'go-mode-hook 'auto-complete-for-go)
 ; -----------------------------------------------------------------------------------------
 
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
