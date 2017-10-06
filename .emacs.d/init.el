@@ -69,7 +69,7 @@
       indent-tabs-mode nil)
 
  ;; if indent-tabs-mode is off, untabify before saving
- (add-hook 'write-file-hooks 
+ (add-hook 'write-file-hooks
           (lambda () (if (not indent-tabs-mode)
                          (untabify (point-min) (point-max)))))
 
@@ -377,6 +377,14 @@
     (replace-regexp re "" nil beg end)))
 
 ;; gomode config
+(add-hook 'go-mode-hook
+  (lambda ()
+   (setq-default)
+   (setq tab-width 4)
+   (setq standard-indent 4)
+   (setq indent-tabs-mode t)
+   (setq untabify-this-buffer nil)))
+
 (with-eval-after-load 'go-mode
    (require 'go-autocomplete))
 
@@ -393,26 +401,20 @@
 
 (add-to-list 'exec-path "/Users/cscatolini/Code/go/bin")
 (defun my-go-mode-hook ()
-                                        ; Use goimports instead of go-fmt
+  ; Use goimports instead of go-fmt
   (setq gofmt-command "goimports")
-
-  ; gofmt on save
-  (lambda ()
-            (add-hook 'before-save-hook 'gofmt-before-save)
-            (setq tab-width 4)
-            (setq indent-tabs-mode 1))
-;  (add-hook 'before-save-hook 'gofmt-before-save)
+  (add-hook 'before-save-hook 'gofmt-before-save)
 
   ; Customize compile command to run go build
   (if (not (string-match "go" compile-command))
       (set (make-local-variable 'compile-command)
            "go build -v && go vet"))
 
+
   ; godef key bindings
   (local-set-key (kbd "M-?") 'godef-jump)
   (local-set-key (kbd "M-.") 'pop-tag-mark)
   )
-(add-hook 'go-mode-hook 'my-go-mode-hook)
 
 (defun auto-complete-for-go ()
   (auto-complete-mode 1))
@@ -701,4 +703,3 @@
 
 (require 'column-marker)
 (add-hook 'prog-mode-hook (lambda () (interactive) (column-marker-1 100)))
-
