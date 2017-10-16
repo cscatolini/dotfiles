@@ -68,10 +68,11 @@
 (setq tab-width 2
       indent-tabs-mode nil)
 
- ;; if indent-tabs-mode is off, untabify before saving
- (add-hook 'write-file-hooks
-          (lambda () (if (not indent-tabs-mode)
-                         (untabify (point-min) (point-max)))))
+ ;; THIS IS BREAKING YAML, PY AND RB SAVES
+ ;; ;; if indent-tabs-mode is off, untabify before saving
+ ;; (add-hook 'write-file-hooks
+ ;;          (lambda () (if (not indent-tabs-mode)
+ ;;                         (untabify (point-min) (point-max)))))
 
  (defvar untabify-this-buffer)
  (defun untabify-all ()
@@ -83,7 +84,18 @@
    (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
    (add-hook 'before-save-hook #'untabify-all))
  (add-hook 'prog-mode-hook 'untabify-mode)
+; ---
 
+ (defvar untabify-this-buffer)
+ (defun untabify-all ()
+   "Untabify the current buffer, unless `untabify-this-buffer' is nil."
+   (and untabify-this-buffer (untabify (point-min) (point-max))))
+ (define-minor-mode untabify-mode
+   "Untabify buffer on save." nil " untab" nil
+   (make-variable-buffer-local 'untabify-this-buffer)
+   (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
+   (add-hook 'before-save-hook #'untabify-all))
+ (add-hook 'prog-mode-hook 'untabify-mode)
 
 (setq make-backup-files nil)
 
@@ -576,7 +588,7 @@
  '(git-gutter:modified-sign "== ")
  '(package-selected-packages
    (quote
-    (toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme yaml-mode writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
+    (yaml-mode flycheck-yamllint toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
