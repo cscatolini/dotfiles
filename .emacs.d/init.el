@@ -1,4 +1,4 @@
-; FROM http://aaronbedra.com/emacs.d/
+                                        ; FROM http://aaronbedra.com/emacs.d/
 (setq user-full-name "Camila Scatolini")
 (setq user-mail-address "camila.scatolini@gmail.com")
 
@@ -16,29 +16,29 @@
 (setq package-archive-enable-alist '(("melpa" magit f)))
 
 (defvar cscatolini/packages '(ac-slime
-                          auto-complete
-                          autopair
-                          ess
-                          f
-                          feature-mode
-                          flycheck
-                          go-autocomplete
-                          go-eldoc
-                          go-mode
-                          graphviz-dot-mode
-                          haml-mode
-                          htmlize
-                          magit
-                          markdown-mode
-                          marmalade
-                          org
-                          powerline
-                          rvm
-                          smex
-                          solarized-theme
-                          web-mode
-                          writegood-mode
-                          yaml-mode)
+                              auto-complete
+                              autopair
+                              ess
+                              f
+                              feature-mode
+                              flycheck
+                              go-autocomplete
+                              go-eldoc
+                              go-mode
+                              graphviz-dot-mode
+                              haml-mode
+                              htmlize
+                              magit
+                              markdown-mode
+                              marmalade
+                              org
+                              powerline
+                              rvm
+                              smex
+                              solarized-theme
+                              web-mode
+                              writegood-mode
+                              yaml-mode)
   "Default packages")
 
 (defun cscatolini/packages-installed-p ()
@@ -68,34 +68,34 @@
 (setq tab-width 2
       indent-tabs-mode nil)
 
- ;; THIS IS BREAKING YAML, PY AND RB SAVES
- ;; ;; if indent-tabs-mode is off, untabify before saving
- ;; (add-hook 'write-file-hooks
- ;;          (lambda () (if (not indent-tabs-mode)
- ;;                         (untabify (point-min) (point-max)))))
+;; THIS IS BREAKING YAML, PY AND RB SAVES
+;; ;; if indent-tabs-mode is off, untabify before saving
+;; (add-hook 'write-file-hooks
+;;          (lambda () (if (not indent-tabs-mode)
+;;                         (untabify (point-min) (point-max)))))
 
- (defvar untabify-this-buffer)
- (defun untabify-all ()
-   "Untabify the current buffer, unless `untabify-this-buffer' is nil."
-   (and untabify-this-buffer (untabify (point-min) (point-max))))
- (define-minor-mode untabify-mode
-   "Untabify buffer on save." nil " untab" nil
-   (make-variable-buffer-local 'untabify-this-buffer)
-   (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
-   (add-hook 'before-save-hook #'untabify-all))
- (add-hook 'prog-mode-hook 'untabify-mode)
-; ---
+(defvar untabify-this-buffer)
+(defun untabify-all ()
+  "Untabify the current buffer, unless `untabify-this-buffer' is nil."
+  (and untabify-this-buffer (untabify (point-min) (point-max))))
+(define-minor-mode untabify-mode
+  "Untabify buffer on save." nil " untab" nil
+  (make-variable-buffer-local 'untabify-this-buffer)
+  (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
+  (add-hook 'before-save-hook #'untabify-all))
+(add-hook 'prog-mode-hook 'untabify-mode)
+                                        ; ---
 
- (defvar untabify-this-buffer)
- (defun untabify-all ()
-   "Untabify the current buffer, unless `untabify-this-buffer' is nil."
-   (and untabify-this-buffer (untabify (point-min) (point-max))))
- (define-minor-mode untabify-mode
-   "Untabify buffer on save." nil " untab" nil
-   (make-variable-buffer-local 'untabify-this-buffer)
-   (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
-   (add-hook 'before-save-hook #'untabify-all))
- (add-hook 'prog-mode-hook 'untabify-mode)
+(defvar untabify-this-buffer)
+(defun untabify-all ()
+  "Untabify the current buffer, unless `untabify-this-buffer' is nil."
+  (and untabify-this-buffer (untabify (point-min) (point-max))))
+(define-minor-mode untabify-mode
+  "Untabify buffer on save." nil " untab" nil
+  (make-variable-buffer-local 'untabify-this-buffer)
+  (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
+  (add-hook 'before-save-hook #'untabify-all))
+(add-hook 'prog-mode-hook 'untabify-mode)
 
 (setq make-backup-files nil)
 
@@ -390,15 +390,15 @@
 
 ;; gomode config
 (add-hook 'go-mode-hook
-  (lambda ()
-   (setq-default)
-   (setq tab-width 4)
-   (setq standard-indent 4)
-   (setq indent-tabs-mode t)
-   (setq untabify-this-buffer nil)))
+          (lambda ()
+            (setq-default)
+            (setq tab-width 4)
+            (setq standard-indent 4)
+            (setq indent-tabs-mode t)
+            (setq untabify-this-buffer nil)))
 
 (with-eval-after-load 'go-mode
-   (require 'go-autocomplete))
+  (require 'go-autocomplete))
 
 (defun set-exec-path-from-shell-PATH ()
   (let ((path-from-shell (replace-regexp-in-string
@@ -413,17 +413,17 @@
 
 (add-to-list 'exec-path "/Users/cscatolini/Code/go/bin")
 (defun my-go-mode-hook ()
-  ; Use goimports instead of go-fmt
+                                        ; Use goimports instead of go-fmt
   (setq gofmt-command "goimports")
   (add-hook 'before-save-hook 'gofmt-before-save)
 
-  ; Customize compile command to run go build
+                                        ; Customize compile command to run go build
   (if (not (string-match "go" compile-command))
       (set (make-local-variable 'compile-command)
            "go build -v && go vet"))
 
 
-  ; godef key bindings
+                                        ; godef key bindings
   (local-set-key (kbd "M-?") 'godef-jump)
   (local-set-key (kbd "M-.") 'pop-tag-mark)
   )
@@ -432,7 +432,7 @@
   (auto-complete-mode 1))
 (add-hook 'go-mode-hook 'auto-complete-for-go)
 (add-hook 'go-mode-hook 'my-go-mode-hook)
-; -----------------------------------------------------------------------------------------
+                                        ; -----------------------------------------------------------------------------------------
 
 (global-set-key (kbd "C-x M-t") 'cleanup-region)
 (global-set-key (kbd "C-c n") 'cleanup-buffer)
@@ -468,9 +468,9 @@
 (defun eshell/my-prompt ()
   (let ((header-bg "#161616"))
     (concat
-;     (with-face user-login-name :foreground "#dc322f")
-;     (with-face (concat "@" hostname) :foreground "#268bd2")
-;     " "
+                                        ;     (with-face user-login-name :foreground "#dc322f")
+                                        ;     (with-face (concat "@" hostname) :foreground "#268bd2")
+                                        ;     " "
      (with-face (eshell/abbr-pwd) :foreground "#008700")
      (if (= (user-uid) 0)
          (with-face "#" :foreground "red")
@@ -566,11 +566,15 @@
           (lambda ()
             (go-eldoc-setup)
             (add-hook 'before-save-hook 'gofmt-before-save)))
-
+;; THEMES
 (if window-system
     (load-theme 'solarized-light t)
-  (load-theme 'afternoon t))
-;; wombat
+;;  (load-theme 'dracula t))
+;;  (load-theme 'afternoon t))
+;;  (load-theme 'avk-darkblue-white t))
+  (load-theme 'seti t))
+;;  (load-theme 'ubuntu t))
+;;  (load-theme 'wombat t))
 ;; seti
 (require 'ansi-color)
 (defun colorize-compilation-buffer ()
@@ -588,7 +592,7 @@
  '(git-gutter:modified-sign "== ")
  '(package-selected-packages
    (quote
-    (yaml-mode flycheck-yamllint toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
+    (avk-emacs-themes exotica-theme ubuntu-theme dracula-theme lua-mode vimish-fold origami ace-window avy ag yaml-mode flycheck-yamllint toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -644,8 +648,8 @@
 
 ;; disable jshint since we prefer eslint checking
 (setq-default flycheck-disabled-checkers
-  (append flycheck-disabled-checkers
-    '(javascript-jshint)))
+              (append flycheck-disabled-checkers
+                      '(javascript-jshint)))
 
 ;; use eslint with web-mode for jsx files
 (flycheck-add-mode 'javascript-eslint 'web-mode)
@@ -690,8 +694,8 @@
 ;; - courtesy of Patrick @halbtuerke
 (defadvice web-mode-highlight-part (around tweak-jsx activate)
   (if (equal web-mode-content-type "jsx")
-    (let ((web-mode-enable-part-face nil))
-      ad-do-it)
+      (let ((web-mode-enable-part-face nil))
+        ad-do-it)
     ad-do-it))
 
 ;; highlight per-line instead
@@ -716,3 +720,23 @@
 
 (require 'column-marker)
 (add-hook 'prog-mode-hook (lambda () (interactive) (column-marker-1 100)))
+
+;; avy
+(global-set-key (kbd "C-x :") 'avy-goto-char)
+(global-set-key (kbd "C-x ;") 'avy-goto-char-2)
+(global-set-key (kbd "M-g f") 'avy-goto-line)
+(global-set-key (kbd "M-g w") 'avy-goto-word-1)
+
+;; origami
+(global-origami-mode t)
+(global-set-key (kbd "C-c f") 'origami-recursively-toggle-node)
+(global-set-key (kbd "C-c g") 'origami-toggle-all-nodes)
+(global-set-key (kbd "C-c s") 'origami-show-only-node)
+(global-set-key (kbd "C-c u") 'origami-undo)
+(global-set-key (kbd "C-c n") 'origami-show-node)
+(global-set-key (kbd "C-c o") 'origami-open-node)
+(global-set-key (kbd "C-c 0") 'origami-open-node-recursively)
+(global-set-key (kbd "C-c a") 'origami-open-all-nodes)
+
+(global-set-key (kbd "C-x r") 'revert-buffer)
+

@@ -1,0 +1,43 @@
+# This is Git's per-user configuration file.
+[core]
+  editor = emacs
+  excludesfile = /Users/cscatolini/.gitignore_global
+  whitespace = fix,-ident-with-non-tab,trailing-space,space-before-tab,cr-at-eol
+[user]
+  name = Camila Scatolini
+  email = camila.scatolini@gmail.com
+[filter "lfs"]
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  required = true
+[alias]
+  purr = pull --rebase
+  fastamend = commit --amend --no-edit
+  st = status
+  ci = commit
+  br = branch
+  co = checkout
+  df = diff
+  lg = log -p
+  lol = log --graph --pretty=format:'%C(yellow)%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cblue(%cr)%Creset' --abbrev-commit --date=relative
+  lola = log --graph --pretty=format:'%C(yellow)%h%Creset %an: %s - %Creset %C(yellow)%d%Creset %Cblue(%cr)%Creset' --abbrev-commit --date=relative --all
+  ls = ls-files
+[color]
+  ui = true
+[color "branch"]
+  current = yellow reverse
+  local = yellow
+  remote = green
+[color "diff"]
+  meta = yellow bold
+  frag = magenta bold
+  old = red bold
+  new = green bold
+  whitespace = red reverse
+[color "status"]
+  added = green
+  changed = yellow
+  untracked = red
+
+[branch]
+  autosetupmerge = true
