@@ -592,13 +592,14 @@
  '(git-gutter:modified-sign "== ")
  '(package-selected-packages
    (quote
-    (avk-emacs-themes exotica-theme ubuntu-theme dracula-theme lua-mode vimish-fold origami ace-window avy ag yaml-mode flycheck-yamllint toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
+    (poker rainbow-mode move-text avk-emacs-themes exotica-theme ubuntu-theme dracula-theme lua-mode vimish-fold origami ace-window avy ag yaml-mode flycheck-yamllint toggle-window column-marker exec-path-from-shell json-mode multiple-cursors git-gutter flycheck-gometalinter flycheck-pycheckers go-complete golint govet go-mode afternoon-theme writegood-mode web-mode solarized-theme smex seti-theme rvm powerline marmalade markdown-mode magit htmlize haml-mode graphviz-dot-mode go-eldoc go-autocomplete flycheck feature-mode f ess autopair ac-slime))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+ '(highlight ((t (:background "#FFFFFF" :foreground "color-57"))))
+ '(isearch ((t (:background "#151718" :foreground "color-127" :box (:line-width 1 :color "#4F99D3") :weight bold)))))
 
 ;; ;; flycheck-gometalinter
 ;; ;; skips 'vendor' directories and sets GO15VENDOREXPERIMENT=1
@@ -631,8 +632,8 @@
 ;; https://github.com/magnars/multiple-cursors.el
 (require 'multiple-cursors)
 (global-set-key (kbd "C-x C-l") 'mc/edit-lines)
-(global-set-key (kbd "C->") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-<") 'mc/mark-previous-like-this)
+(global-set-key (kbd "C-x >") 'mc/mark-next-like-this)
+(global-set-key (kbd "C-x <") 'mc/mark-previous-like-this)
 (global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
 
 ;; use web-mode for .jsx files
@@ -717,6 +718,7 @@
  whitespace-style '(face empty tabs lines-tail trailing)
  whitespace-line-column 100)
 (global-whitespace-mode t)
+(setq whitespace-global-modes '(not go-mode))
 
 (require 'column-marker)
 (add-hook 'prog-mode-hook (lambda () (interactive) (column-marker-1 100)))
@@ -734,9 +736,33 @@
 (global-set-key (kbd "C-c s") 'origami-show-only-node)
 (global-set-key (kbd "C-c u") 'origami-undo)
 (global-set-key (kbd "C-c n") 'origami-show-node)
+(global-set-key (kbd "C-c c") 'origami-close-node)
 (global-set-key (kbd "C-c o") 'origami-open-node)
 (global-set-key (kbd "C-c 0") 'origami-open-node-recursively)
 (global-set-key (kbd "C-c a") 'origami-open-all-nodes)
 
+;; move lines
+(defun move-line-up ()
+  "Move up the current line."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
+
+(defun move-line-down ()
+  "Move down the current line."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
+
+(global-set-key (kbd "<ESC> <up>") 'move-line-up)
+(global-set-key (kbd "<ESC> <down>") 'move-line-down)
+
 (global-set-key (kbd "C-x r") 'revert-buffer)
+(global-set-key (kbd "C-x i") 'indent-buffer)
+(global-set-key (kbd "C-x s") 'sort-lines)
+(provide 'init)
+;;; init.el ends here
 
