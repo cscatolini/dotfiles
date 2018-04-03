@@ -17,7 +17,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (nyan-mode fzf ag flycheck multiple-cursors origami magit go-guru go-autocomplete auto-complete go-mode))))
+    (helm helm-ag helm-projectile projectile smex avy flycheck-gometalinter exec-path-from-shell fzf ag flycheck multiple-cursors origami magit go-guru go-autocomplete auto-complete go-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -26,9 +26,22 @@
  )
 
 ;; general configuration
+(delete-selection-mode t)
+(setq column-number-mode t)
 (setq make-backup-files nil)
 (setq-default show-trailing-whitespace t)
 (defalias 'yes-or-no-p 'y-or-n-p)
+
+;; smex - autocomplete M-x
+(require 'smex)
+(smex-initialize) ; Can be omitted. This might cause a (minimal) delay when Smex is auto-initialized on its first run.
+(global-set-key (kbd "M-x") 'smex)
+(global-set-key (kbd "M-X") 'smex-major-mode-commands)
+
+;; ido-mode - autocomplete C-c C-f
+(ido-mode t)
+(setq ido-enable-flex-matching t
+      ido-use-virtual-buffers t)
 
 ;; go related configuration
 (setenv "GOPATH" "/Users/cscatolini/Code/go")
@@ -64,6 +77,9 @@
   (auto-complete-mode 1))
 (add-hook 'go-mode-hook 'auto-complete-for-go)
 
+(when (memq window-system '(mac ns))
+  (exec-path-from-shell-initialize)
+  (exec-path-from-shell-copy-env "GOPATH"))
 
 ;; tabs
 (setq tab-width 2
@@ -221,6 +237,11 @@
   (forward-line -1)
   (indent-according-to-mode))
 
+;; fuzzy finder
+(helm-mode t)
+(projectile-global-mode t)
+(setq projectile-enable-caching t)
+
 ;; key bindings
 (global-set-key (kbd "RET") 'newline-and-indent)
 (global-set-key (kbd "C-c C-k") 'compile)
@@ -244,7 +265,12 @@
 (global-set-key (kbd "C-x r") 'revert-buffer)
 (global-set-key (kbd "C-x i") 'indent-buffer)
 (global-set-key (kbd "C-x s") 'sort-lines)
-(global-set-key (kbd "C-x f") 'fzf)
+(global-set-key (kbd "C-x f") 'helm-projectile-find-file-dwim)
+(global-set-key (kbd "C-x p") 'previous-multiframe-window)
+(global-set-key (kbd "C-c <left>")  'windmove-left)
+(global-set-key (kbd "C-c <right>") 'windmove-right)
+(global-set-key (kbd "C-c <up>")    'windmove-up)
+(global-set-key (kbd "C-c <down>")  'windmove-down)
 
 (provide 'init)
 ;;; init.el ends here
