@@ -17,7 +17,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (helm helm-ag helm-projectile projectile smex avy flycheck-gometalinter exec-path-from-shell fzf ag flycheck multiple-cursors origami magit go-guru go-autocomplete auto-complete go-mode))))
+    (go-errcheck golint jedi flycheck-pycheckers python-mode gotest go-eldoc ac-js2 xref-js2 js2-mode expand-region atom-one-dark-theme nord-theme helm helm-ag helm-projectile projectile smex avy flycheck-gometalinter exec-path-from-shell fzf ag flycheck multiple-cursors origami magit go-guru go-autocomplete auto-complete go-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -26,6 +26,7 @@
  )
 
 ;; general configuration
+(menu-bar-mode -1)
 (delete-selection-mode t)
 (setq column-number-mode t)
 (setq make-backup-files nil)
@@ -56,8 +57,12 @@
             (setq untabify-this-buffer nil)))
 
 (defun my-go-mode-hook ()
-  ; Use goimports instead of go-fmt
+  ; eldoc shows the signature of the function at point in the status bar.
+  (go-eldoc-setup)
+
+  ; use goimports instead of go-fmt
   (setq gofmt-command "goimports")
+
   ; Call Gofmt before saving
   (add-hook 'before-save-hook 'gofmt-before-save)
   ; Customize compile command to run go build
@@ -68,7 +73,17 @@
   ; Godef jump key binding
   (local-set-key (kbd "M-.") 'godef-jump)
   (local-set-key (kbd "M-*") 'pop-tag-mark)
-  )
+
+  ; function callers
+  (local-set-key (kbd "M-m") 'go-guru-callers)
+
+  ;; from https://github.com/cockroachdb/cockroach/wiki/ben's-go-emacs-setup
+  (let ((map go-mode-map))
+    (define-key map (kbd "C-c a") 'go-test-current-project) ;; current package, really
+    (define-key map (kbd "C-c m") 'go-test-current-file)
+    (define-key map (kbd "C-c .") 'go-test-current-test)
+    (define-key map (kbd "C-c b") 'go-run))
+)
 (add-hook 'go-mode-hook 'my-go-mode-hook)
 
 (with-eval-after-load 'go-mode
@@ -80,6 +95,28 @@
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize)
   (exec-path-from-shell-copy-env "GOPATH"))
+
+;; javascript related configuration
+(defun js-custom ()
+  "js-mode-hook"
+  (setq js-indent-level 2))
+(add-hook 'js-mode-hook 'js-custom)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-hook 'js2-mode-hook 'ac-js2-mode)
+(setq ac-js2-evaluate-calls t)
+(add-hook
+ 'js2-mode-hook
+ (lambda ()
+   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
+(setq js2-strict-missing-semi-warning nil)
+
+;; python related configuration
+(defun my-python-mode-hook ()
+  (local-set-key (kbd "M-.") 'py-find-definition)
+)
+(add-hook 'python-mode-hook 'my-python-mode-hook)
+(add-hook 'python-mode-hook 'jedi:setup)
+(setq jedi:complete-on-dot t)
 
 ;; tabs
 (setq tab-width 2
@@ -137,7 +174,10 @@
 ;; theme
 (if window-system
     (load-theme 'solarized-light t)
-    (load-theme 'seti t))
+    ;; (load-theme 'seti t))
+    (load-theme 'nord t))
+    ;; (load-theme 'monokai t))
+    ;; (load-theme 'atom-one-dark t))
 (require 'ansi-color)
 (defun colorize-compilation-buffer ()
   (toggle-read-only)
@@ -146,14 +186,11 @@
 (add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
 
 ;; git gutters
-
 (require 'git-gutter)
 (global-git-gutter-mode t)
 (git-gutter:linum-setup)
 (set-face-foreground 'git-gutter:added "green")
 (set-face-foreground 'git-gutter:deleted "red")
-
-
 
 ;; multiple-cursors
 ;; https://github.com/magnars/multiple-cursors.el
@@ -242,6 +279,10 @@
 (projectile-global-mode t)
 (setq projectile-enable-caching t)
 
+;; revert buffer without confirmation
+(defun revert-buffer-no-confirm ()
+  (interactive) (revert-buffer t t))
+
 ;; key bindings
 (global-set-key (kbd "RET") 'newline-and-indent)
 (global-set-key (kbd "C-c C-k") 'compile)
@@ -262,7 +303,7 @@
 (global-set-key (kbd "C-c a") 'origami-open-all-nodes)
 (global-set-key (kbd "<ESC> <up>") 'move-line-up)
 (global-set-key (kbd "<ESC> <down>") 'move-line-down)
-(global-set-key (kbd "C-x r") 'revert-buffer)
+(global-set-key (kbd "M-r") 'revert-buffer-no-confirm)
 (global-set-key (kbd "C-x i") 'indent-buffer)
 (global-set-key (kbd "C-x s") 'sort-lines)
 (global-set-key (kbd "C-x f") 'helm-projectile-find-file-dwim)
@@ -271,6 +312,12 @@
 (global-set-key (kbd "C-c <right>") 'windmove-right)
 (global-set-key (kbd "C-c <up>")    'windmove-up)
 (global-set-key (kbd "C-c <down>")  'windmove-down)
+(global-set-key (kbd "C-\\")  'er/expand-region)
+(global-set-key (kbd "C-c r")  'projectile-replace)
+(global-set-key (kbd "C-c g")  'projectile-replace-regexp)
+(global-set-key (kbd "C-c i")  'projectile-invalidate-cache)
+(global-set-key (kbd "C-c f")  'projectile-ag)
+(global-set-key (kbd "C-c n")  'flycheck-next-error)
 
 (provide 'init)
 ;;; init.el ends here
