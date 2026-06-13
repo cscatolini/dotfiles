@@ -1,0 +1,5 @@
+[user]
+  email = camila.scatolini@sanar.com
+
+[credential "https://gitlab.com"]
+  helper = osxkeychain

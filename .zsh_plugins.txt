@@ -1,0 +1,18 @@
+# .zsh_plugins.txt — plugins carregados pelo Antidote
+# Documentação: https://getantidote.github.io
+
+# Completions do zsh (base)
+zsh-users/zsh-completions
+
+# Syntax highlighting (deve vir antes do autosuggestions)
+zsh-users/zsh-syntax-highlighting
+
+# Sugestões ao digitar (novo — não tinha no seu .zshrc original, mas vale muito)
+zsh-users/zsh-autosuggestions
+
+# NVM com lazy load (equivalente ao zsh-nvm do oh-my-zsh)
+lukechilds/zsh-nvm
+
+# Completions do kubectl
+# (requer kubectl instalado — gera completions dinamicamente)
+# Alternativa: adicione `source <(kubectl completion zsh)` no .zshrc
