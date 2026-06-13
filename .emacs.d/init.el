@@ -1,323 +1,258 @@
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
-(package-initialize)
+;;; init.el --- Emacs config 2026 -*- lexical-binding: t -*-
+
+;;; ── Package bootstrap ──────────────────────────────────────────────────────
 
 (require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.milkbox.net/packages/") t)
+(setq package-archives
+      '(("melpa"  . "https://melpa.org/packages/")
+        ("gnu"    . "https://elpa.gnu.org/packages/")
+        ("nongnu" . "https://elpa.nongnu.org/packages/")))
+(package-initialize)
+(unless package-archive-contents (package-refresh-contents))
 
-(add-to-list 'load-path "~/.emacs.d/custom/")
+;; use-package is built-in since Emacs 29
+(require 'use-package)
+(setq use-package-always-ensure t)
 
+;;; ── Core settings ──────────────────────────────────────────────────────────
+
+(setq inhibit-startup-message t
+      make-backup-files        nil
+      auto-save-default        nil
+      column-number-mode       t
+      ring-bell-function       'ignore
+      use-short-answers        t)   ; replaces (defalias 'yes-or-no-p 'y-or-n-p)
+
+(setq-default indent-tabs-mode          nil
+              tab-width                 2
+              fill-column               100
+              show-trailing-whitespace  t)
+
+(menu-bar-mode        -1)
+(delete-selection-mode t)
+(global-auto-revert-mode t)
+
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+
+;;; ── Built-in visual improvements ───────────────────────────────────────────
+
+;; Line numbers (replaces deprecated linum-mode)
+(global-display-line-numbers-mode t)
+(setq display-line-numbers-width 3)
+
+;; Column indicator at 100 chars (replaces column-marker package)
+(setq-default display-fill-column-indicator-column 100)
+(add-hook 'prog-mode-hook #'display-fill-column-indicator-mode)
+
+;; which-key is built-in since Emacs 30 — shows keybinding hints
+(which-key-mode t)
+
+;;; ── Theme ──────────────────────────────────────────────────────────────────
+
+(use-package nord-theme
+  :config (load-theme 'nord t))
+
+;;; ── Shell PATH on macOS ────────────────────────────────────────────────────
+
+(use-package exec-path-from-shell
+  :config (exec-path-from-shell-initialize))
+
+;;; ── Completion: vertico + orderless + marginalia + consult ─────────────────
+;;
+;; Replaces the old ido + smex + helm stack.
+;; vertico = vertical minibuffer UI
+;; orderless = space-separated fuzzy matching ("go mod" finds "go.mod")
+;; marginalia = annotations in completion lists
+;; consult = enhanced commands (grep, find, buffer switch, etc.)
+
+(use-package vertico
+  :init (vertico-mode t))
+
+(use-package orderless
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-defaults nil)
+  (completion-category-overrides '((file (styles partial-completion)))))
+
+(use-package marginalia
+  :init (marginalia-mode t))
+
+(use-package consult
+  :bind
+  ("C-x b"   . consult-buffer)
+  ("C-x f"   . consult-find)
+  ("C-c s"   . consult-ripgrep)
+  ("M-g g"   . consult-goto-line)
+  ("M-g i"   . consult-imenu))
+
+;; In-buffer popup completion (replaces auto-complete)
+(use-package corfu
+  :custom
+  (corfu-auto       t)
+  (corfu-auto-delay 0.2)
+  (corfu-cycle      t)
+  :init (global-corfu-mode t))
+
+(use-package cape
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev))
+
+;;; ── Tree-sitter ─────────────────────────────────────────────────────────────
+;;
+;; treesit-auto automatically uses *-ts-mode variants when grammars are
+;; available. Run M-x treesit-auto-install-all to download grammars.
+
+(use-package treesit-auto
+  :custom (treesit-auto-install 'prompt)
+  :config
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode))
+
+;;; ── LSP via eglot (built-in since Emacs 29) ────────────────────────────────
+;;
+;; Lighter and simpler than lsp-mode. Works out of the box with:
+;;   Go:         gopls          → brew install gopls
+;;   TypeScript: ts-ls          → npm i -g typescript-language-server typescript
+;;   Python:     pyright        → pip install pyright
+
+(use-package eglot
+  :hook
+  (go-ts-mode         . eglot-ensure)
+  (python-ts-mode     . eglot-ensure)
+  (typescript-ts-mode . eglot-ensure)
+  (tsx-ts-mode        . eglot-ensure)
+  (js-ts-mode         . eglot-ensure)
+  :custom
+  (eglot-autoshutdown t)
+  :config
+  (setq-default eglot-workspace-configuration
+                '(:gopls (:usePlaceholders t
+                          :staticcheck    t
+                          :gofumpt        t))))
+
+;;; ── Go ──────────────────────────────────────────────────────────────────────
+
+(add-hook 'go-ts-mode-hook
+          (lambda ()
+            (setq tab-width        4
+                  indent-tabs-mode t)
+            ;; format + organize imports on save via gopls
+            (add-hook 'before-save-hook #'eglot-format-buffer nil t)))
+
+(use-package gotest
+  :bind (:map go-ts-mode-map
+         ("C-c t a" . go-test-current-project)
+         ("C-c t f" . go-test-current-file)
+         ("C-c t t" . go-test-current-test)
+         ("C-c t r" . go-run)))
+
+;;; ── TypeScript / JavaScript ─────────────────────────────────────────────────
+;; typescript-ts-mode and js-ts-mode come built-in with tree-sitter support.
+;; .tsx files → tsx-ts-mode (handled by treesit-auto)
+
+(add-hook 'typescript-ts-mode-hook
+          (lambda ()
+            (add-hook 'before-save-hook #'eglot-format-buffer nil t)))
+
+;;; ── Python ──────────────────────────────────────────────────────────────────
+;; python-ts-mode is built-in. pyright handles completion + diagnostics via eglot.
+
+;;; ── Git ─────────────────────────────────────────────────────────────────────
+
+(use-package magit
+  :bind ("C-x g" . magit-status))
+
+;; diff-hl works better than git-gutter in terminal + Emacs 29+
+(use-package diff-hl
+  :hook (prog-mode            . diff-hl-mode)
+  :hook (magit-pre-refresh    . diff-hl-magit-pre-refresh)
+  :hook (magit-post-refresh   . diff-hl-magit-post-refresh))
+
+;;; ── Navigation ──────────────────────────────────────────────────────────────
+
+(use-package avy
+  :bind
+  ("C-x :" . avy-goto-char)
+  ("C-x ;" . avy-goto-char-2)
+  ("M-g f" . avy-goto-line)
+  ("M-g w" . avy-goto-word-1))
+
+(use-package projectile
+  :init (projectile-mode t)
+  :custom (projectile-enable-caching t)
+  :bind-keymap ("C-c p" . projectile-command-map))
+
+;;; ── Editing utilities ───────────────────────────────────────────────────────
+
+(use-package multiple-cursors
+  :bind
+  ("C-x C-l" . mc/edit-lines)
+  ("C-x >"   . mc/mark-next-like-this)
+  ("C-x <"   . mc/mark-previous-like-this)
+  ("C-c C-<" . mc/mark-all-like-this))
+
+(use-package expand-region
+  :bind ("C-\\" . er/expand-region))
+
+;;; ── Code folding (built-in, replaces origami) ───────────────────────────────
+
+(add-hook 'prog-mode-hook #'hs-minor-mode)
+(global-set-key (kbd "C-c f") #'hs-toggle-hiding)
+(global-set-key (kbd "C-c F") #'hs-show-all)
+
+;;; ── Untabify on save (except Makefiles and Go) ──────────────────────────────
+
+(defvar-local untabify-this-buffer nil)
+(defun untabify-all ()
+  (and untabify-this-buffer (untabify (point-min) (point-max))))
+(define-minor-mode untabify-mode
+  "Untabify buffer on save." :lighter " untab"
+  (setq-local untabify-this-buffer
+              (not (derived-mode-p 'makefile-mode 'go-mode 'go-ts-mode)))
+  (add-hook 'before-save-hook #'untabify-all nil t))
+(add-hook 'prog-mode-hook #'untabify-mode)
+
+;;; ── Utility functions ───────────────────────────────────────────────────────
+
+(defun indent-buffer ()
+  (interactive)
+  (indent-region (point-min) (point-max)))
+
+(defun revert-buffer-no-confirm ()
+  (interactive)
+  (revert-buffer t t))
+
+;;; ── ANSI colors in compilation ──────────────────────────────────────────────
+
+(add-hook 'compilation-filter-hook #'ansi-color-compilation-filter)
+
+;;; ── Global key bindings ─────────────────────────────────────────────────────
+
+(global-set-key (kbd "RET")     #'newline-and-indent)
+(global-set-key (kbd "C-c C-k") #'compile)
+(global-set-key (kbd "C-x g")   #'magit-status)
+(global-set-key (kbd "C-x i")   #'indent-buffer)
+(global-set-key (kbd "M-r")     #'revert-buffer-no-confirm)
+(global-set-key (kbd "C-x s")   #'sort-lines)
+(global-set-key (kbd "C-x p")   #'previous-multiframe-window)
+
+(global-set-key (kbd "C-c <left>")  #'windmove-left)
+(global-set-key (kbd "C-c <right>") #'windmove-right)
+(global-set-key (kbd "C-c <up>")    #'windmove-up)
+(global-set-key (kbd "C-c <down>")  #'windmove-down)
+
+(provide 'init)
+;;; init.el ends here
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (go-errcheck golint jedi flycheck-pycheckers python-mode gotest go-eldoc ac-js2 xref-js2 js2-mode expand-region atom-one-dark-theme nord-theme helm helm-ag helm-projectile projectile smex avy flycheck-gometalinter exec-path-from-shell fzf ag flycheck multiple-cursors origami magit go-guru go-autocomplete auto-complete go-mode))))
+ '(package-selected-packages nil))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-
-;; general configuration
-(menu-bar-mode -1)
-(delete-selection-mode t)
-(setq column-number-mode t)
-(setq make-backup-files nil)
-(setq-default show-trailing-whitespace t)
-(defalias 'yes-or-no-p 'y-or-n-p)
-
-;; smex - autocomplete M-x
-(require 'smex)
-(smex-initialize) ; Can be omitted. This might cause a (minimal) delay when Smex is auto-initialized on its first run.
-(global-set-key (kbd "M-x") 'smex)
-(global-set-key (kbd "M-X") 'smex-major-mode-commands)
-
-;; ido-mode - autocomplete C-c C-f
-(ido-mode t)
-(setq ido-enable-flex-matching t
-      ido-use-virtual-buffers t)
-
-;; go related configuration
-(setenv "GOPATH" "/Users/cscatolini/Code/go")
-(add-to-list 'exec-path "/Users/cscatolini/Code/go/bin")
-
-(add-hook 'go-mode-hook
-          (lambda ()
-            (setq-default)
-            (setq tab-width 4)
-            (setq standard-indent 4)
-            (setq indent-tabs-mode t)
-            (setq untabify-this-buffer nil)))
-
-(defun my-go-mode-hook ()
-  ; eldoc shows the signature of the function at point in the status bar.
-  (go-eldoc-setup)
-
-  ; use goimports instead of go-fmt
-  (setq gofmt-command "goimports")
-
-  ; Call Gofmt before saving
-  (add-hook 'before-save-hook 'gofmt-before-save)
-  ; Customize compile command to run go build
-  (if (not (string-match "go" compile-command))
-      (set (make-local-variable 'compile-command)
-           "go build -v && go test -v && go vet"))
-  ; jump to next compile error with C-x `
-  ; Godef jump key binding
-  (local-set-key (kbd "M-.") 'godef-jump)
-  (local-set-key (kbd "M-*") 'pop-tag-mark)
-
-  ; function callers
-  (local-set-key (kbd "M-m") 'go-guru-callers)
-
-  ;; from https://github.com/cockroachdb/cockroach/wiki/ben's-go-emacs-setup
-  (let ((map go-mode-map))
-    (define-key map (kbd "C-c a") 'go-test-current-project) ;; current package, really
-    (define-key map (kbd "C-c m") 'go-test-current-file)
-    (define-key map (kbd "C-c .") 'go-test-current-test)
-    (define-key map (kbd "C-c b") 'go-run))
-)
-(add-hook 'go-mode-hook 'my-go-mode-hook)
-
-(with-eval-after-load 'go-mode
-  (require 'go-autocomplete))
-(defun auto-complete-for-go ()
-  (auto-complete-mode 1))
-(add-hook 'go-mode-hook 'auto-complete-for-go)
-
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-env "GOPATH"))
-
-;; javascript related configuration
-(defun js-custom ()
-  "js-mode-hook"
-  (setq js-indent-level 2))
-(add-hook 'js-mode-hook 'js-custom)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-(add-hook 'js2-mode-hook 'ac-js2-mode)
-(setq ac-js2-evaluate-calls t)
-(add-hook
- 'js2-mode-hook
- (lambda ()
-   (add-hook 'xref-backend-functions #'xref-js2-xref-backend nil t)))
-(setq js2-strict-missing-semi-warning nil)
-
-;; python related configuration
-(defun my-python-mode-hook ()
-  (local-set-key (kbd "M-.") 'py-find-definition)
-)
-(add-hook 'python-mode-hook 'my-python-mode-hook)
-(add-hook 'python-mode-hook 'jedi:setup)
-(setq jedi:complete-on-dot t)
-
-;; tabs
-(setq tab-width 2
-      indent-tabs-mode nil)
-(defvar untabify-this-buffer)
-(defun untabify-all ()
-  "Untabify the current buffer, unless `untabify-this-buffer' is nil."
-  (and untabify-this-buffer (untabify (point-min) (point-max))))
-(define-minor-mode untabify-mode
-  "Untabify buffer on save." nil " untab" nil
-  (make-variable-buffer-local 'untabify-this-buffer)
-  (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
-  (add-hook 'before-save-hook #'untabify-all))
-(add-hook 'prog-mode-hook 'untabify-mode)
-(defvar untabify-this-buffer)
-(defun untabify-all ()
-  "Untabify the current buffer, unless `untabify-this-buffer' is nil."
-  (and untabify-this-buffer (untabify (point-min) (point-max))))
-(define-minor-mode untabify-mode
-  "Untabify buffer on save." nil " untab" nil
-  (make-variable-buffer-local 'untabify-this-buffer)
-  (setq untabify-this-buffer (not (derived-mode-p 'makefile-mode)))
-  (add-hook 'before-save-hook #'untabify-all))
-(add-hook 'prog-mode-hook 'untabify-mode)
-
-;; buffer
-(defun untabify-buffer ()
-  (interactive)
-  (untabify (point-min) (point-max)))
-
-(defun indent-buffer ()
-  (interactive)
-  (indent-region (point-min) (point-max)))
-
-(defun cleanup-buffer ()
-  "Perform a bunch of operations on the whitespace content of a buffer."
-  (interactive)
-  (indent-buffer)
-  (untabify-buffer)
-  (delete-trailing-whitespace))
-
-(defun cleanup-region (beg end)
-  "Remove tmux artifacts from region."
-  (interactive "r")
-  (dolist (re '("\\\\│\·*\n" "\W*│\·*"))
-    (replace-regexp re "" nil beg end)))
-
-;; before save
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
-
-;; line numbers
-(global-linum-mode t)
-(setq linum-format "%d ")
-
-;; theme
-(if window-system
-    (load-theme 'solarized-light t)
-    ;; (load-theme 'seti t))
-    (load-theme 'nord t))
-    ;; (load-theme 'monokai t))
-    ;; (load-theme 'atom-one-dark t))
-(require 'ansi-color)
-(defun colorize-compilation-buffer ()
-  (toggle-read-only)
-  (ansi-color-apply-on-region (point-min) (point-max))
-  (toggle-read-only))
-(add-hook 'compilation-filter-hook 'colorize-compilation-buffer)
-
-;; git gutters
-(require 'git-gutter)
-(global-git-gutter-mode t)
-(git-gutter:linum-setup)
-(set-face-foreground 'git-gutter:added "green")
-(set-face-foreground 'git-gutter:deleted "red")
-
-;; multiple-cursors
-;; https://github.com/magnars/multiple-cursors.el
-(require 'multiple-cursors)
-(global-set-key (kbd "C-x C-l") 'mc/edit-lines)
-(global-set-key (kbd "C-x >") 'mc/mark-next-like-this)
-(global-set-key (kbd "C-x <") 'mc/mark-previous-like-this)
-(global-set-key (kbd "C-c C-<") 'mc/mark-all-like-this)
-
-;; flycheck
-(require 'flycheck)
-;; turn on flychecking globally
-(add-hook 'after-init-hook #'global-flycheck-mode)
-;; check on save
-(setq flycheck-check-syntax-automatically '(mode-enabled save))
-;; disable jshint since we prefer eslint checking
-(setq-default flycheck-disabled-checkers
-              (append flycheck-disabled-checkers
-                      '(javascript-jshint)))
-;; use eslint with web-mode for jsx files
-(flycheck-add-mode 'javascript-eslint 'web-mode)
-;; customize flycheck temp file prefix
-(setq-default flycheck-temp-prefix ".flycheck")
-;; use local eslint from node_modules before global
-;; http://emacs.stackexchange.com/questions/21205/flycheck-with-file-relative-eslint-executable
-(defun my/use-eslint-from-node-modules ()
-  (let* ((root (locate-dominating-file
-                (or (buffer-file-name) default-directory)
-                "node_modules"))
-         (eslint (and root
-                      (expand-file-name "node_modules/eslint/bin/eslint.js"
-                                        root))))
-    (when (and eslint (file-executable-p eslint))
-      (setq-local flycheck-javascript-eslint-executable eslint))))
-(add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)
-;; highlight per-line instead
-(setq flycheck-highlighting-mode 'symbols)
-(setq flycheck-indication-mode 'left-fringe)
-;; highlight per-line instead
-(setq flycheck-highlighting-mode 'symbols)
-(setq flycheck-indication-mode 'left-fringe)
-
-(set-face-attribute 'flycheck-warning nil
-                    :background "#FF8C00"
-                    :foreground "#ffffff"
-                    :underline nil)
-
-(set-face-attribute 'flycheck-error nil
-                    :background "#800000"
-                    :foreground "#ffffff"
-                    :underline nil)
-
-;; whitespace
-(require 'whitespace)
-(setq
- whitespace-style '(face empty tabs lines-tail trailing)
- whitespace-line-column 100)
-(global-whitespace-mode t)
-(setq whitespace-global-modes '(not go-mode))
-
-;; column marker
-(require 'column-marker)
-(add-hook 'prog-mode-hook (lambda () (interactive) (column-marker-1 100)))
-
-;; origami
-(global-origami-mode t)
-
-;; move lines up and down
-(defun move-line-up ()
-  "Move up the current line."
-  (interactive)
-  (transpose-lines 1)
-  (forward-line -2)
-  (indent-according-to-mode))
-
-(defun move-line-down ()
-  "Move down the current line."
-  (interactive)
-  (forward-line 1)
-  (transpose-lines 1)
-  (forward-line -1)
-  (indent-according-to-mode))
-
-;; fuzzy finder
-(helm-mode t)
-(projectile-global-mode t)
-(setq projectile-enable-caching t)
-
-;; revert buffer without confirmation
-(defun revert-buffer-no-confirm ()
-  (interactive) (revert-buffer t t))
-
-;; key bindings
-(global-set-key (kbd "RET") 'newline-and-indent)
-(global-set-key (kbd "C-c C-k") 'compile)
-(global-set-key (kbd "C-x g") 'magit-status)
-(global-set-key (kbd "C-x i") 'indent-buffer)
-(global-set-key (kbd "C-x :") 'avy-goto-char)
-(global-set-key (kbd "C-x ;") 'avy-goto-char-2)
-(global-set-key (kbd "M-g f") 'avy-goto-line)
-(global-set-key (kbd "M-g w") 'avy-goto-word-1)
-(global-set-key (kbd "C-c f") 'origami-recursively-toggle-node)
-(global-set-key (kbd "C-c g") 'origami-toggle-all-nodes)
-(global-set-key (kbd "C-c s") 'origami-show-only-node)
-(global-set-key (kbd "C-c u") 'origami-undo)
-(global-set-key (kbd "C-c n") 'origami-show-node)
-(global-set-key (kbd "C-c c") 'origami-close-node)
-(global-set-key (kbd "C-c o") 'origami-open-node)
-(global-set-key (kbd "C-c 0") 'origami-open-node-recursively)
-(global-set-key (kbd "C-c a") 'origami-open-all-nodes)
-(global-set-key (kbd "<ESC> <up>") 'move-line-up)
-(global-set-key (kbd "<ESC> <down>") 'move-line-down)
-(global-set-key (kbd "M-r") 'revert-buffer-no-confirm)
-(global-set-key (kbd "C-x i") 'indent-buffer)
-(global-set-key (kbd "C-x s") 'sort-lines)
-(global-set-key (kbd "C-x f") 'helm-projectile-find-file-dwim)
-(global-set-key (kbd "C-x p") 'previous-multiframe-window)
-(global-set-key (kbd "C-c <left>")  'windmove-left)
-(global-set-key (kbd "C-c <right>") 'windmove-right)
-(global-set-key (kbd "C-c <up>")    'windmove-up)
-(global-set-key (kbd "C-c <down>")  'windmove-down)
-(global-set-key (kbd "C-\\")  'er/expand-region)
-(global-set-key (kbd "C-c r")  'projectile-replace)
-(global-set-key (kbd "C-c g")  'projectile-replace-regexp)
-(global-set-key (kbd "C-c i")  'projectile-invalidate-cache)
-(global-set-key (kbd "C-c f")  'projectile-ag)
-(global-set-key (kbd "C-c n")  'flycheck-next-error)
-
-(provide 'init)
-;;; init.el ends here
