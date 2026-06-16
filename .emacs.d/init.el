@@ -158,6 +158,16 @@
 ;;; ── Python ──────────────────────────────────────────────────────────────────
 ;; python-ts-mode is built-in. pyright handles completion + diagnostics via eglot.
 
+;;; ── Markdown ─────────────────────────────────────────────────────────────────
+
+(use-package markdown-mode
+  :mode (("\\.md\\'"       . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode)
+         ("README\\.md\\'" . gfm-mode))
+  :custom
+  (markdown-command "multimarkdown")
+  (markdown-fontify-code-blocks-natively t))
+
 ;;; ── Git ─────────────────────────────────────────────────────────────────────
 
 (use-package magit
