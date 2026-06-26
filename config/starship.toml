@@ -1,0 +1,77 @@
+# ~/.config/starship.toml
+# Inspirado no Pure (sindresorhus/pure)
+
+format = """
+$username$directory$git_branch$git_status$cmd_duration$nodejs$python$golang$ruby$kubernetes$character"""
+
+# Usuário
+[username]
+show_always = true
+style_user = "bold fg:#999999"
+style_root = "bold fg:#cb4b16"
+format = "[$user]($style) "
+
+# Diretório
+[directory]
+style = "fg:#6c71c4"
+truncation_length = 3
+truncate_to_repo = true
+format = "[$path]($style) "
+
+# Branch do git
+[git_branch]
+symbol = ""
+style = "fg:#88C0D0"
+format = "[$symbol$branch]($style)"
+
+# Status do git
+[git_status]
+style = "fg:#cb4b16"
+format = "[$modified$untracked$staged$ahead_behind]($style) "
+modified = "*"
+untracked = "?"
+staged = "+"
+ahead = "⇡"
+behind = "⇣"
+diverged = "⇡⇣"
+conflicted = "!"
+deleted = ""
+renamed = ""
+
+# Duração do comando (só mostra se > 5s, discreto)
+[cmd_duration]
+min_time = 5_000
+style = "fg:#444444"
+format = "[$duration]($style) "
+
+# Node, Python, Go, Ruby — só mostra quando relevante, sem ícone
+[nodejs]
+symbol = ""
+style = "fg:#444444"
+format = "[$version]($style) "
+
+[python]
+symbol = ""
+style = "fg:#444444"
+format = "[$version]($style) "
+
+[golang]
+symbol = ""
+style = "fg:#444444"
+format = "[$version]($style) "
+
+[ruby]
+symbol = ""
+style = "fg:#444444"
+format = "[$version]($style) "
+
+# Kubernetes — só contexto, sem ícone
+[kubernetes]
+disabled = false
+style = "fg:#444444"
+format = "[$context]($style) "
+
+# Prompt ❯ — cinza ok, vermelho no erro
+[character]
+success_symbol = "[❯](fg:#555555)"
+error_symbol = "[❯](fg:#cb4b16)"
