@@ -165,7 +165,7 @@
          ("\\.markdown\\'" . markdown-mode)
          ("README\\.md\\'" . gfm-mode))
   :custom
-  (markdown-command "multimarkdown")
+  (markdown-command "pandoc --from=gfm --to=html5")
   (markdown-fontify-code-blocks-natively t))
 
 ;;; ── Git ─────────────────────────────────────────────────────────────────────
