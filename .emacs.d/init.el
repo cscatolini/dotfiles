@@ -12,7 +12,10 @@
 
 ;; use-package is built-in since Emacs 29
 (require 'use-package)
-(setq use-package-always-ensure t)
+(setq use-package-always-ensure t
+      package-install-upgrade-built-ins t)
+
+(use-package compat :pin gnu)
 
 ;;; ── Core settings ──────────────────────────────────────────────────────────
 
