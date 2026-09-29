@@ -63,6 +63,13 @@ alias code="cd ~/Code"
 # bat (syntax highlight no cat) — instalar: brew install bat
 command -v bat &>/dev/null && alias cat="bat"
 
+# eza (ls colorido/moderno) — instalar: brew install eza
+if command -v eza &>/dev/null; then
+  alias ls="eza --icons --group-directories-first"
+  alias ll="eza -la --icons --group-directories-first"
+  alias lt="eza --tree --icons"
+fi
+
 # ------------------------------------------------------------
 # 6. ALIASES — typos comuns
 # ------------------------------------------------------------
