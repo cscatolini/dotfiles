@@ -65,9 +65,9 @@ command -v bat &>/dev/null && alias cat="bat"
 
 # eza (ls colorido/moderno) — instalar: brew install eza
 if command -v eza &>/dev/null; then
-  alias ls="eza --icons --group-directories-first"
-  alias ll="eza -la --icons --group-directories-first"
-  alias lt="eza --tree --icons"
+  alias ls="eza --group-directories-first"
+  alias ll="eza -la --group-directories-first"
+  alias lt="eza --tree"
 fi
 
 # ------------------------------------------------------------
