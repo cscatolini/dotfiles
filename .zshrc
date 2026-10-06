@@ -62,6 +62,8 @@ alias code="cd ~/Code"
 
 # bat (syntax highlight no cat) — instalar: brew install bat
 command -v bat &>/dev/null && alias cat="bat"
+export BAT_STYLE="-numbers"
+export BAT_THEME="Nord"
 
 # eza (ls colorido/moderno) — instalar: brew install eza
 if command -v eza &>/dev/null; then
